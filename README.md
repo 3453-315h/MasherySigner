@@ -1,41 +1,44 @@
 # AWSSigner
-Burp Extension for AWS Sigv4 Signing 
+Burp Extension for Mashery Signing 
 
-Add your Access Key, Secret Key, Region, and Service to the properties in the extension tab. 
+Add your API Key and API Secret to the properties in the extension tab. At this 
+time, only SHA256 signatures are supported. 
 
-The extension will look for the "X-AMZ-Date" header in all requests being sent by Burp. If it finds a request, it will update the signature in the request. Your request must also have an Authorization header, which should be on all AWS signed requests.
+The extension will look for both the `api_key` and `sig` query parameters in all
+requests being sent by Burp. If it finds a request, it will update the signature
+in the query. 
 
 ## Example Request
 
-The extenion takes an existing Sigv4 request and updates the Authorization and X-AMZ-Date headers.
+The extension takes an existing Mashery request and updates the `api_key` and 
+`sig` parameters.
 
-Here's an example of a Sigv4 request that the extention will update:
+Here's an example of a Mashery request that the extension will update:
 
 ```
-GET /?Param1=value1 HTTP/1.1
-Host:example.amazonaws.com
-Content-Type: application/x-www-form-urlencoded; charset=utf-8
-X-Amz-Date:20150830T123600Z
-Authorization: AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20190101/us-west-1/test/request, SignedHeaders=content-type;host;x-amz-date, Signature=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+GET /mashery/api/endpoint?api_key=abcdefhijklmnopqrstuvwx&sig=7abdf02dd9224a2367fd78fa12596c49d0a154c4ab73abe3e6dc822ef565a0c6 HTTP/1.1
+User-Agent: MyApp/1.23.4/Android/8.0.0
+Host: api.example.com
+Connection: close
+Accept-Encoding: gzip, deflate
 ```
 
-More information about Sigv4 can be found here: 
-* https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
-* https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
+More information about Mashery's request signing can be found here: 
+* https://support.mashery.com/docs/read/mashery_api/20/Authentication
+* https://docs.mashery.com/design/GUID-517A43A4-F054-41D1-9F5C-C736B557AF88.html
 
 ## Download
 
-The most recent jar file can be found in the releases https://github.com/NetSPI/AWSSigner/releases
+The most recent jar file can be found in the releases https://github.com/NetSPI/MasherySigner/releases
 
 ## Build
 
-1. git clone https://github.com/NetSPI/AWSSigner.git
+1. git clone https://github.com/NetSPI/MasherySigner.git
 2. Install gradle for your distribution (https://gradle.org/install/)
-3. cd AWSSigner
-4. gradle build
-5. Jar file will be in the build/libs directory
+3. `cd MasherySigner`
+4. `gradle build`
+5. JAR file will be in the build/libs directory
 
-![Alt text](/screenshots/awssigner.png?raw=true)
-
-![Alt text](/screenshots/contextitem.png?raw=true)
-
+## Acknowledgements
+MasherySigner is based off of [AWSSigner](https://github.com/netspi/awssigner) 
+by Eric Gruber (@egru).
