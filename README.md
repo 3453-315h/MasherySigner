@@ -2,7 +2,8 @@
 Burp Extension for Mashery Signing 
 
 Add your API Key and API Secret to the properties in the extension tab. At this 
-time, only SHA256 signatures are supported. 
+time, only SHA256 signatures are supported. If you need MD5 request signing, add
+the relevant code to Utility.java.
 
 The extension will look for both the `api_key` and `sig` query parameters in all
 requests being sent by Burp. If it finds a request, it will update the signature
