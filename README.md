@@ -1,4 +1,4 @@
-# AWSSigner
+# MasherySigner
 Burp Extension for Mashery Signing 
 
 Add your API Key and API Secret to the properties in the extension tab. At this 
