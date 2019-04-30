@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/awssigner.iml" filepath="$PROJECT_DIR$/.idea/modules/awssigner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/masherysigner.iml" filepath="$PROJECT_DIR$/.idea/modules/masherysigner.iml" />
     </modules>
   </component>
 </project>

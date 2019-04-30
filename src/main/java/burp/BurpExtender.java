@@ -12,16 +12,16 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
     private IExtensionHelpers helpers;
     private PrintWriter pw;
     private JPanel panel;
-    private JTextField accessKey;
-    private JTextField secretKey;
-    private JTextField region;
-    private JTextField service;
+    private JTextField apiKey;
+    private JTextField apiSecret;
 
     private JComboBox profileComboBox;
     private int numProfiles = 0;
@@ -30,10 +30,8 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
     private JButton deleteProfileButton;
     private boolean justDeleted = false;
     private HashMap<Integer, String[]> profiles;
-    private int ACCESS_KEY = 0;
-    private int SECRET_KEY = 1;
-    private int REGION = 2;
-    private int SERVICE = 3;
+    private int API_KEY = 0;
+    private int API_SECRET = 1;
 
     @Override
     public void registerExtenderCallbacks(final IBurpExtenderCallbacks callbacks) {
@@ -44,7 +42,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
         setupTab();
 
-        callbacks.setExtensionName("AWS Signer");
+        callbacks.setExtensionName("Mashery Signer");
 
         callbacks.registerContextMenuFactory(new Menu());
 
@@ -67,13 +65,13 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
         if (boxSize == 0) {
 
             // If there's nothing here, just add our add profile button
-            this.profileComboBox.addItem(new AWSSignerMenuItem("Add Profile", 0));
+            this.profileComboBox.addItem(new MasherySignerMenuItem("Add Profile", 0));
         } else {
 
             // If there is already an add profile button, start creating profiles
             numProfiles++;
-            profileComboBox.insertItemAt(new AWSSignerMenuItem("Profile " + numProfiles, numProfiles), boxSize - 1);
-            profiles.put(numProfiles, new String[]{"", "", "", ""});
+            profileComboBox.insertItemAt(new MasherySignerMenuItem("Profile " + numProfiles, numProfiles), boxSize - 1);
+            profiles.put(numProfiles, new String[]{"", ""});
             profileComboBox.setSelectedIndex(boxSize - 1);
             clearProfile();
 
@@ -83,17 +81,13 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
     public void clearProfile() {
         // Reset text fields
-        this.accessKey.setText("");
-        this.secretKey.setText("");
-        this.region.setText("");
-        this.service.setText("");
+        this.apiKey.setText("");
+        this.apiSecret.setText("");
     }
 
     public void populateProfile(int profile) {
-        this.accessKey.setText(this.profiles.get(profile)[ACCESS_KEY]);
-        this.secretKey.setText(this.profiles.get(profile)[SECRET_KEY]);
-        this.region.setText(this.profiles.get(profile)[REGION]);
-        this.service.setText(this.profiles.get(profile)[SERVICE]);
+        this.apiKey.setText(this.profiles.get(profile)[API_KEY]);
+        this.apiSecret.setText(this.profiles.get(profile)[API_SECRET]);
     }
 
     public void setupTab() {
@@ -101,13 +95,14 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
         this.profiles = new HashMap<Integer, String[]>();
 
         createNewProfile();
+        // For "new profile" menu item
         createNewProfile();
 
         this.profileComboBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED && !justDeleted) {
-                    int selectedProfile = ((AWSSignerMenuItem) e.getItem()).getProfileNumber();
+                    int selectedProfile = ((MasherySignerMenuItem) e.getItem()).getProfileNumber();
                     if (selectedProfile == 0) {
                         pw.println("Creating new profile...");
                         createNewProfile();
@@ -131,13 +126,11 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                int profile = ((AWSSignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
-                pw.println("Saved profile " + profile + " with key: " + accessKey.getText());
+                int profile = ((MasherySignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
+                pw.println("Saved profile " + profile + " with key: " + apiKey.getText());
                 profiles.put(profile,
-                        new String[]{accessKey.getText(),
-                                secretKey.getText(),
-                                region.getText(),
-                                service.getText()});
+                        new String[]{apiKey.getText(),
+                                apiSecret.getText()});
             }
 
             @Override
@@ -164,7 +157,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                int profile = ((AWSSignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
+                int profile = ((MasherySignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
                 int index = profileComboBox.getSelectedIndex();
                 pw.println("Deleting profile " + profile + "...");
 
@@ -179,13 +172,13 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
                     // There are profiles after this one, move to the newer profile
                     profileComboBox.setSelectedIndex(index);
-                    int newProfile = ((AWSSignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
+                    int newProfile = ((MasherySignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
                     populateProfile(newProfile);
                 } else if (profiles.size() > 0) {
 
                     // No newer profiles, but there are older ones. Move to the older one
                     profileComboBox.setSelectedIndex(index - 1);
-                    int newProfile = ((AWSSignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
+                    int newProfile = ((MasherySignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
                     populateProfile(newProfile);
                 } else {
 
@@ -227,7 +220,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                int profile = ((AWSSignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
+                int profile = ((MasherySignerMenuItem) profileComboBox.getSelectedItem()).getProfileNumber();
                 Menu.setEnabledProfile(profile);
             }
 
@@ -246,11 +239,11 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
     // Set the menu items in the context menu
     private void setMenuItems() {
         int itemCount = profileComboBox.getItemCount();
-        AWSSignerMenuItem[] menuItems = new AWSSignerMenuItem[itemCount - 1];
+        MasherySignerMenuItem[] menuItems = new MasherySignerMenuItem[itemCount - 1];
 
         // Skip the first item, it's just the add profile button
         for (int i = 0; i < itemCount - 1; i++) {
-            menuItems[i] = (AWSSignerMenuItem) profileComboBox.getItemAt(i);
+            menuItems[i] = (MasherySignerMenuItem) profileComboBox.getItemAt(i);
         }
 
         Menu.setMenuItems(menuItems);
@@ -258,7 +251,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
 
     @Override
     public String getTabCaption() {
-        return "AWS Signer";
+        return "Mashery Signer";
     }
 
     @Override
@@ -273,18 +266,20 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
             if (Menu.getEnabledProfile() > 0) {
                 IRequestInfo request = helpers.analyzeRequest(messageInfo.getRequest());
 
-                java.util.List<String> headers = request.getHeaders();
+                java.util.List<IParameter> params = request.getParameters();
+                Stream<IParameter> ps = params.stream();
 
-                if (headers.stream().anyMatch((str -> str.trim().toLowerCase().contains("x-amz-date")))) {
+                Predicate<IParameter> onlyUrl = param -> (param.getType() == IParameter.PARAM_URL);
+                Predicate<IParameter> namedParams = param -> (param.getName().equals("api_key") || param.getName().equals("sig")); ;
+
+                if (ps.filter(onlyUrl).anyMatch(namedParams)) {
                     String[] profile = this.profiles.get(Menu.getEnabledProfile());
-                    pw.println("Signing with profile " + Menu.getEnabledProfile() + " with key: " + profile[ACCESS_KEY]);
+                    pw.println("Signing with profile " + Menu.getEnabledProfile() + " with key: " + profile[API_KEY]);
                     byte[] signedRequest = Utility.signRequest(messageInfo,
                             helpers,
-                            profile[SERVICE],
-                            profile[REGION],
-                            profile[ACCESS_KEY],
-                            profile[SECRET_KEY]);
-
+                            profile[API_KEY],
+                            profile[API_SECRET]);
+                    pw.println(signedRequest.toString());
                     messageInfo.setRequest(signedRequest);
 
                 }
@@ -313,23 +308,13 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener {
         final JLabel label1 = new JLabel();
         label1.setText("Access Key: ");
         panel.add(label1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        accessKey = new JTextField();
-        panel.add(accessKey, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        apiKey = new JTextField();
+        panel.add(apiKey, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Secret Key:");
         panel.add(label2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label3 = new JLabel();
-        label3.setText("Region: ");
-        panel.add(label3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label4 = new JLabel();
-        label4.setText("Service: ");
-        panel.add(label4, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        secretKey = new JTextField();
-        panel.add(secretKey, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        region = new JTextField();
-        panel.add(region, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        service = new JTextField();
-        panel.add(service, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        apiSecret = new JTextField();
+        panel.add(apiSecret, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel.add(spacer1, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JLabel label5 = new JLabel();

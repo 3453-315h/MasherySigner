@@ -2,12 +2,12 @@ package burp;
 
 import javax.swing.*;
 
-public class AWSSignerMenuItem extends JMenuItem {
+public class MasherySignerMenuItem extends JMenuItem {
     private int profileNumber;
     private String itemText;
     private boolean isEnabled;
 
-    public AWSSignerMenuItem(String itemText, int profileNumber) {
+    public MasherySignerMenuItem(String itemText, int profileNumber) {
         this.itemText = itemText;
         this.profileNumber = profileNumber;
 

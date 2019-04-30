@@ -8,8 +8,8 @@ import java.util.List;
 
 public class Menu implements IContextMenuFactory {
     private static JMenu subMenu;
-    private static AWSSignerMenuItem enabledMenuItem;
-    private static AWSSignerMenuItem[] menuItems = new AWSSignerMenuItem[] {};
+    private static MasherySignerMenuItem enabledMenuItem;
+    private static MasherySignerMenuItem[] menuItems = new MasherySignerMenuItem[] {};
 
     @Override
     public List<JMenuItem> createMenuItems(IContextMenuInvocation invocation) {
@@ -31,7 +31,7 @@ public class Menu implements IContextMenuFactory {
         subMenu.add(disableItem);
 
         // Add a menu item for every profile we currently have
-        for (AWSSignerMenuItem menuItem : menuItems) {
+        for (MasherySignerMenuItem menuItem : menuItems) {
             initializeMenuItem(menuItem);
             subMenu.add(menuItem);
         }
@@ -40,11 +40,11 @@ public class Menu implements IContextMenuFactory {
         return list;
     }
 
-    public static void setMenuItems(AWSSignerMenuItem[] menuItems) {
+    public static void setMenuItems(MasherySignerMenuItem[] menuItems) {
         Menu.menuItems = menuItems;
     }
 
-    private void initializeMenuItem(AWSSignerMenuItem newMenuItem) {
+    private void initializeMenuItem(MasherySignerMenuItem newMenuItem) {
         newMenuItem.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -142,7 +142,7 @@ public class Menu implements IContextMenuFactory {
         } else {
 
             // I don't want to keep a map of all the profiles. Just iterate through them until we find the right one
-            for (AWSSignerMenuItem menuItem : menuItems) {
+            for (MasherySignerMenuItem menuItem : menuItems) {
                 if (menuItem.getProfileNumber() == profile) {
                     menuItem.enableProfile();
                     enabledMenuItem = menuItem;
